@@ -55,21 +55,11 @@ DatabaseAccessor::DatabaseAccessor()
     {
         qDebug() << "DatabaseAccessor: SUCCESS connection to database";
         connect(this, &DatabaseAccessor::request, this, &DatabaseAccessor::slot_requestDB);
-
-        // Разблокировать все книги по истечению времени резервирования
-        QJsonObject obj;
-        obj.insert("type", Request::UnblockAllBooks);
-        emit request(obj);
     }
     else
     {
         qDebug() << "DatabaseAccessor: FAILURE connection to database: " << db.lastError();
     }
-
-    QTimer* timer = new QTimer;
-    timer->setInterval(10*1000);      // Каждые 10 секунд посылаем сигнал
-    connect(timer, &QTimer::timeout, this, &DatabaseAccessor::slot_sendConnectionStatus);
-    timer->start();
 }
 
 void DatabaseAccessor::slot_sendConnectionStatus()
@@ -446,6 +436,14 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
         qDebug() << "DataBaseAccessor: undefined type of message";
         break;
     }
+}
+
+void DatabaseAccessor::slot_unblockAllBooks()
+{
+    // Разблокировать все книги по истечению времени резервирования
+    QJsonObject obj;
+    obj.insert("type", Request::UnblockAllBooks);
+    emit request(obj);
 }
 
 

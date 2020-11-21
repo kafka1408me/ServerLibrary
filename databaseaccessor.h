@@ -21,6 +21,7 @@ signals:
 public slots:
     void slot_sendConnectionStatus();
     void slot_requestDB(QJsonObject str_in);
+    void slot_unblockAllBooks();
 
 public:
     static QString dbHost;

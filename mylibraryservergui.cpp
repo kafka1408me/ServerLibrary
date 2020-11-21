@@ -55,6 +55,13 @@ MyLibraryServerGui::MyLibraryServerGui(QWidget *parent) :
 
     myLibServ = this;
 
+    connect(this, &MyLibraryServerGui::sendMsg , ui->logText, &QTextEdit::append);
+
+    defaultMsgHandler = qInstallMessageHandler(myMessageOutput);
+
+    QtConcurrent::run(this, &MyLibraryServerGui::startServer);
+    QtConcurrent::run(this, &MyLibraryServerGui::startDB);
+
     scrollTimer = new QTimer(this);
     connect(scrollTimer, &QTimer::timeout, this, &MyLibraryServerGui::slot_Scroll_Log);
     scrollTimer->setInterval(timeScrollingMSecs);
@@ -63,10 +70,6 @@ MyLibraryServerGui::MyLibraryServerGui(QWidget *parent) :
     {
         scrollTimer->start();
     }
-
-    connect(this, &MyLibraryServerGui::sendMsg , ui->logText, &QTextEdit::append);
-
-    defaultMsgHandler = qInstallMessageHandler(myMessageOutput);
 
     ui->portLbl->hide();
     ui->portNumLbl->hide();
@@ -81,9 +84,6 @@ MyLibraryServerGui::MyLibraryServerGui(QWidget *parent) :
     ui->tableWidget->hideColumn(3);
 
     setWindowTitle("My Library Server");
-
-    startDB();
-    QtConcurrent::run(this, &MyLibraryServerGui::startServer);
 
     qDebug() << "MainThread = " << QThread::currentThreadId();
 }
@@ -201,6 +201,7 @@ void MyLibraryServerGui::startDB()
     threadDBAccess = new QThread;
     DatabaseAccessor::getInstance()->moveToThread(threadDBAccess);
     threadDBAccess->start();
+    DatabaseAccessor::getInstance()->slot_unblockAllBooks();
 }
 
 void MyLibraryServerGui::startServer()
