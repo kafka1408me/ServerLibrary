@@ -221,12 +221,18 @@ void MyLibraryServerGui::startServer()
 
 void MyLibraryServerGui::on_autoScroll_stateChanged(int state)
 {
-    if(state && !scrollTimer->isActive())
-    {
-        scrollTimer->start();
-    }
-    else if(state == 0 && scrollTimer->isActive())
+    if(!state)
     {
         scrollTimer->stop();
     }
+    else
+    {
+        scrollTimer->start();
+    }
 }
+
+
+
+
+
+
