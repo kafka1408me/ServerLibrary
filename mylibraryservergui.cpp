@@ -16,33 +16,39 @@ static MyLibraryServerGui* myLibServ = nullptr;
 
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-    static QByteArray localMsg;
-    static QDateTime currentTime;
     static QString myMsg("%1 : %2");
 
     switch (type) {
     case QtDebugMsg:
     {
-        currentTime = QDateTime::currentDateTime();
+        QDateTime currentTime = QDateTime::currentDateTime();
         myLibServ->sendMessageToTextEdit(myMsg.arg(currentTime.toString()).arg(msg));
         break;
     }
     case QtInfoMsg:
-        localMsg = msg.toLocal8Bit();
+    {
+        QByteArray localMsg = msg.toLocal8Bit();
         fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         break;
+    }
     case QtWarningMsg:
-        localMsg = msg.toLocal8Bit();
+    {
+        QByteArray localMsg = msg.toLocal8Bit();
         fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         break;
+    }
     case QtCriticalMsg:
-        localMsg = msg.toLocal8Bit();
+    {
+        QByteArray localMsg = msg.toLocal8Bit();
         fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         break;
+    }
     case QtFatalMsg:
-        localMsg = msg.toLocal8Bit();
+    {
+        QByteArray localMsg = msg.toLocal8Bit();
         fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         abort();
+    }
     }
 }
 
@@ -142,7 +148,8 @@ void MyLibraryServerGui::slot_setConnectionServerStatus(bool isConnected)
 
 void MyLibraryServerGui::slot_Scroll_Log()
 {
-    QTextCursor cursor = ui->logText->textCursor();
+    static QTextCursor cursor = ui->logText->textCursor();
+
     cursor.movePosition(QTextCursor::End);
     ui->logText->setTextCursor(cursor);
 }
