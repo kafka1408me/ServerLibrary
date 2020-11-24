@@ -4,6 +4,8 @@
 #include "mylibraryservergui.h"
 #include <QThread>
 #include <QTimer>
+#include <QFile>
+#include <QSslKey>
 
 MyServer::MyServer(int port, QObject *parent) :
     QObject(parent),
@@ -14,10 +16,56 @@ MyServer::MyServer(int port, QObject *parent) :
 
 void MyServer::StartServer()
 {
+    qDebug() << "version build = " << QSslSocket::sslLibraryBuildVersionString();
+    qDebug() << QSslSocket::supportsSsl();
+
+    QFile certFile (":/keys/mylibraryserver.crt");
+    if (!certFile.exists())
+    {
+        qDebug() << "SmacADService: CERTFILE NOT EXIST!!!!!!!!!!!";
+        exit(-3);
+    }
+
+
+    QFile keyFile (":/keys/mylibraryserver-privateKey.key");
+    if (!keyFile.exists())
+    {
+        qDebug() << "SmacADService: KEYFILE NOT EXIST!!!!!!!!!!!";
+        exit(-4);
+    }
+
+    if (!certFile.open (QIODevice::ReadOnly))
+    {
+        qDebug() << "SmacADService: CERTFILE can 't be opened";
+        exit(-5);
+    }
+    if (!keyFile.open (QIODevice::ReadOnly))
+    {
+        qDebug() << "SmacADService: KEYFILE can 't be opened";
+        exit(-6);
+    }
+
+    QSslCertificate certificate (&certFile, QSsl::Pem);
+    QSslKey sslKey (&keyFile, QSsl::Rsa, QSsl::Pem);
+    certFile.close();
+    keyFile.close();
+
+    //ssl конфиг для сервера
+    QSslConfiguration sslConfigServer;
+
+    sslConfigServer.setPeerVerifyMode (QSslSocket::VerifyNone);
+    sslConfigServer.setLocalCertificate (certificate);
+    sslConfigServer.setPrivateKey (sslKey);
+    sslConfigServer.setProtocol (QSsl::TlsV1SslV3);
+
+
+
     qDebug() << "MyServer::StartServer() = THREAD" << QThread::currentThreadId();
     webSocketServer = new QWebSocketServer("MyLibraryServer",
-                                           QWebSocketServer::SslMode::NonSecureMode,
+                                           QWebSocketServer::SslMode::SecureMode,
                                            this);
+
+    webSocketServer->setSslConfiguration(sslConfigServer);
 
     if (!webSocketServer->listen(QHostAddress::Any, port))
     {

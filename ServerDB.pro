@@ -39,3 +39,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 FORMS += \
   mylibraryservergui.ui
+
+RESOURCES += application.qrc
