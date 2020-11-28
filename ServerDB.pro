@@ -31,6 +31,8 @@ HEADERS += \
   myserver.h #\
 #  mytask.h
 
+RC_FILE = myapp.rc
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

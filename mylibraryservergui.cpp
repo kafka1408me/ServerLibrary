@@ -238,8 +238,3 @@ void MyLibraryServerGui::on_autoScroll_stateChanged(int state)
     }
 }
 
-
-
-
-
-

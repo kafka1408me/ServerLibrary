@@ -213,6 +213,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             qDebug() << "DatabaseAccessor: error : " << query.lastError().text();
             replyObjMain.insert("result", "no");
         }
+        replyObjMain.insert("title", title);
 
         replyObj.insert("main", replyObjMain);
 
@@ -239,6 +240,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             qDebug() << "DatabaseAccessor: error : " << query.lastError().text();
             replyObjMain.insert("result", "no");
         }
+        replyObjMain.insert("book_id", book_id);
 
         replyObj.insert("main", replyObjMain);
         QMetaObject::invokeMethod(sender(), invokeSlot, Qt::QueuedConnection, Q_ARG(QJsonObject, replyObj));
@@ -324,6 +326,8 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             emit request(obj);
         });
 
+        replyObjMain.insert("book_id", book_id);
+
         replyObj.insert("main", replyObjMain);
         QMetaObject::invokeMethod(sender(), invokeSlot, Qt::QueuedConnection, Q_ARG(QJsonObject, replyObj));
         break;
@@ -365,6 +369,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             replyObjMain.insert("result", "no");
             qDebug() << "DatabaseAccessor: error : " << query.lastError().text();
         }
+        replyObjMain.insert("book_id", book_id);
 
         replyObj.insert("main", replyObjMain);
         QMetaObject::invokeMethod(sender(), invokeSlot, Qt::QueuedConnection, Q_ARG(QJsonObject, replyObj));
