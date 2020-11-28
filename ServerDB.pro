@@ -118,8 +118,13 @@ win32-g++:contains(QMAKE_HOST.arch, x86_64):{
 CONFIG(debug, debug|release){
 
 }else{
-  QMAKE_POST_LINK += $$quote(cmd /c mkdir \"$${DESTDIR_WIN}\\platforms\"$$escape_expand(\\n\\t))
-  QMAKE_POST_LINK += $$quote(cmd /c mkdir \"$${DESTDIR_WIN}\\sqldrivers\"$$escape_expand(\\n\\t))
+#  QMAKE_POST_LINK += $$quote(cmd /c rmdir /s /q \"$${DESTDIR_WIN}\\platforms\"$$escape_expand(\\n\\t))
+#  QMAKE_POST_LINK += $$quote(cmd /c rmdir /s /q \"$${DESTDIR_WIN}\\sqldrivers\"$$escape_expand(\\n\\t))
+
+#  QMAKE_POST_LINK += $$quote(cmd /c mkdir \"$${DESTDIR_WIN}\\platforms\"$$escape_expand(\\n\\t))
+#  QMAKE_POST_LINK += $$quote(cmd /c mkdir \"$${DESTDIR_WIN}\\sqldrivers\"$$escape_expand(\\n\\t))
+
+  QMAKE_POST_LINK += $$quote(cmd /c \"$${PWD_WIN}\\plugins-built.bat\" \"$${DESTDIR_WIN}\"$$escape_expand(\\n\\t))
 
   copyToDestdir("$$(QTDIR)/bin/Qt5Gui.dll")
   copyToDestdir("$$(QTDIR)/bin/Qt5Core.dll")
