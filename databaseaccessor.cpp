@@ -3,6 +3,8 @@
 #include "myclient.h"
 #include <QDateTime>
 
+
+
 static const char* invokeSlot = "slot_getResultQuery";
 
 static const int reserveTimeSecs = 5*60; // в секундах 5 минут
@@ -89,7 +91,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
         QString login = mainObj.value("login").toString();
         QString pass = mainObj.value("pass").toString();
 
-        query.prepare("SELECT user_id,is_admin FROM users WHERE login =:login and pass=:pass");
+        query.prepare("SELECT user_id,is_admin, rate_app FROM users WHERE login =:login and pass=:pass");
         query.bindValue(":login", login);
         query.bindValue(":pass", pass);
 
@@ -104,6 +106,16 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             QSqlRecord rec = query.record();
             const int user_id = query.value(rec.indexOf("user_id")).toInt();
             const bool is_admin = query.value(rec.indexOf("is_admin")).toBool();
+            QVariant rate_app = query.value(rec.indexOf("rate_app"));
+
+            if(!rate_app.isNull())
+            {
+                replyObjMain.insert("rate_app",rate_app.toInt());
+            }
+            else
+            {
+                qDebug() << "DatabaseAccessor: rate_app is NULL";
+            }
 
             replyObjMain.insert("result","yes");
             replyObjMain.insert("user_id", user_id);
@@ -140,6 +152,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
         QJsonObject replyObj;
         QJsonObject replyObjMain;
         replyObj.insert("type", type);
+        replyObjMain.insert("login", login);
 
         if(query.exec())
         {
@@ -248,7 +261,8 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
     }
     case GetAllBooks:
     {
-        QString request = "SELECT book_id, title, author, genre, year_publication, photo, description, reservation_user_id FROM books";
+        QString request = "SELECT book_id, title, author, genre, year_publication, photo, description, reservation_user_id, time_unblocking FROM books"
+                          " ORDER BY title";
 
         QJsonObject replyObj;
         QJsonObject replyObjMain;
@@ -271,6 +285,9 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
                 book["photo"] = query.value(rec.indexOf("photo")).toString();
                 book["description"] = query.value(rec.indexOf("description")).toString();
                 book["reservation_user_id"] = query.value(rec.indexOf("reservation_user_id")).toInt();
+                book["time_unblocking"] = query.value(rec.indexOf("time_unblocking")).toDateTime().toString("dd.MM.yyyy hh:mm");
+
+            //    qDebug() <<"time_unblocking = " << book["time_unblocking"];
 
                 books.append(book);
             }
@@ -435,6 +452,61 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             qDebug() << "DatabaseAccessor: error : " << query.lastError().text();
         }
 
+        break;
+    }
+    case Check:
+    {
+        QString check = mainObj.value("check").toString();
+
+        //     query.exec();
+
+        QJsonObject replyObj;
+        QJsonObject replyObjMain;
+        replyObj.insert("type", type);
+
+        bool isChecked = false;
+
+        if(check == "mobileclient" || check == "client")
+        {
+            isChecked = true;
+            replyObjMain.insert("check", "server");
+        }
+        else
+        {
+            replyObjMain.insert("check", "ERROR");
+        }
+
+        qDebug()<< "DatabaseAccessor: replyObjMain: " << replyObjMain;
+        replyObj.insert("main",replyObjMain);
+
+
+        QMetaObject::invokeMethod(sender(), invokeSlot, Qt::QueuedConnection, Q_ARG(QJsonObject, replyObj));
+        if(!isChecked)
+        {
+            QMetaObject::invokeMethod(sender(), "disconnected", Qt::QueuedConnection);
+        }
+        break;
+    }
+    case RateAppSet:
+    {
+        const int user_id = mainObj.value("user_id").toInt();
+        const int rate_app = mainObj.value("rate_app").toInt();
+
+        query.prepare("UPDATE users SET rate_app=:rate_app"
+                      "WHERE user_id=:user_id");
+
+        query.bindValue(":rate_app", rate_app);
+        query.bindValue(":user_id", user_id);
+
+        if(query.exec())
+        {
+            qDebug() << "DatabaseAccessor: RateAppSet SUCCESS";
+        }
+        else
+        {
+            qDebug() <<query.lastQuery();
+            qDebug() << "DatabaseAccessor: RateAppSet error : " << query.lastError().text();
+        }
         break;
     }
     default:

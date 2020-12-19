@@ -10,6 +10,7 @@ MyClient::MyClient(QWebSocket *wSocket, QObject *parent) :
     socket(wSocket)
 {
     ipStr = socket->peerAddress().toString();
+//    qDebug() << "port = " << socket->peerName();
 
     qDebug() << "MyClient: new client = " << ipStr;
 
@@ -42,6 +43,7 @@ void MyClient::sendNewActiveUser()
 void MyClient::slot_messageReceived(const QString &message)
 {
     qDebug() << "MyClient::slot_messageReceived TREAD = " << QThread::currentThreadId();
+    qDebug() << "message = " << message;
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
     QJsonObject obj = doc.object();
 
@@ -52,6 +54,7 @@ void MyClient::slot_messageReceived(const QString &message)
 
 void MyClient::disconnected()
 {
+    disconnect(socket, &QWebSocket::disconnected, this, &MyClient::disconnected);
     emit disconnectUser(qint64(socket));
     qDebug() << "MyClient: " << login << " " << ipStr << "disconnected";
     socket->close();
