@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    MyLog.cpp \
     databaseaccessor.cpp \
     main.cpp \
     myclient.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
 #    mytask.cpp
 
 HEADERS += \
+  MyLog.h \
   codes.h \
   databaseaccessor.h \
   myclient.h \

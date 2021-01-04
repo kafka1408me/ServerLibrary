@@ -493,7 +493,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
         const int rate_app = mainObj.value("rate_app").toInt();
 
         query.prepare("UPDATE users SET rate_app=:rate_app"
-                      "WHERE user_id=:user_id");
+                      " WHERE user_id=:user_id");
 
         query.bindValue(":rate_app", rate_app);
         query.bindValue(":user_id", user_id);

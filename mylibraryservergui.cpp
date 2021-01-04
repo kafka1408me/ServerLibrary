@@ -7,6 +7,8 @@
 #include <QTimer>
 #include <QDateTime>
 #include "myclient.h"
+#include "MyLog.h"
+#include <Vector>
 
 const int timeScrollingMSecs = 1*500;
 
@@ -14,42 +16,52 @@ const int port = 4735;
 
 static MyLibraryServerGui* myLibServ = nullptr;
 
+static MyLog* myLog = nullptr;
+
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-    static QString myMsg("%1 : %2");
+    static QString myMsg("%1 : %2 : %3");
+
+    QDateTime currentTime = QDateTime::currentDateTime();
+    QString msgToSend;
+    QString typeMsg("");
+
+    bool isDebug = false;
 
     switch (type) {
     case QtDebugMsg:
     {
-        QDateTime currentTime = QDateTime::currentDateTime();
-        myLibServ->sendMessageToTextEdit(myMsg.arg(currentTime.toString()).arg(msg));
+        isDebug = true;
+        typeMsg = "DEBUG";
         break;
     }
     case QtInfoMsg:
     {
-        QByteArray localMsg = msg.toLocal8Bit();
-        fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        typeMsg = "INFO";
         break;
     }
     case QtWarningMsg:
     {
-        QByteArray localMsg = msg.toLocal8Bit();
-        fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        typeMsg = "WARING";
         break;
     }
     case QtCriticalMsg:
     {
-        QByteArray localMsg = msg.toLocal8Bit();
-        fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        typeMsg = "CRITICAL";
         break;
     }
     case QtFatalMsg:
     {
-        QByteArray localMsg = msg.toLocal8Bit();
-        fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        abort();
+        typeMsg = "FATAL";
+        break;
     }
     }
+    msgToSend = myMsg.arg(currentTime.toString()).arg(typeMsg).arg(msg);
+    if(!isDebug)
+    {
+        msgToSend += " " + QString(context.file) + " " + QString(context.line) + " " + QString(context.function);
+    }
+    myLibServ->sendMessageToTextEdit(msgToSend);
 }
 
 
@@ -61,7 +73,10 @@ MyLibraryServerGui::MyLibraryServerGui(QWidget *parent) :
 
     myLibServ = this;
 
+    myLog = new MyLog;
+
     connect(this, &MyLibraryServerGui::sendMsg , ui->logText, &QTextEdit::append);
+    connect(this, &MyLibraryServerGui::sendMsg , myLog, &MyLog::Log);
 
     defaultMsgHandler = qInstallMessageHandler(myMessageOutput);
 
@@ -96,10 +111,15 @@ MyLibraryServerGui::MyLibraryServerGui(QWidget *parent) :
 
 MyLibraryServerGui::~MyLibraryServerGui()
 {
+    QString myMsg("%1 : %2");
+    QDateTime currentTime = QDateTime::currentDateTime();
+    myLog->Log(myMsg.arg(currentTime.toString()).arg("SERVER FINISHED"));
+
     qInstallMessageHandler(defaultMsgHandler);
     threadServer->exit();
     threadDBAccess->exit();
     delete ui;
+    delete myLog;
 }
 
 void MyLibraryServerGui::sendMessageToTextEdit(const QString &msg)
