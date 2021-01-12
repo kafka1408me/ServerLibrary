@@ -8,7 +8,9 @@
 #include <QDateTime>
 #include "myclient.h"
 #include "MyLog.h"
-#include <Vector>
+
+
+//#define MSG_TYPE  // Раскоментировать эту строку, чтобы выводился в лог тип сообщений
 
 const int timeScrollingMSecs = 1*500;
 
@@ -16,11 +18,13 @@ const int port = 4735;
 
 static MyLibraryServerGui* myLibServ = nullptr;
 
-static MyLog* myLog = nullptr;
-
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+#ifdef MSG_TYPE
     static QString myMsg("%1 : %2 : %3");
+#else
+    static QString myMsg("%1 : %2");
+#endif
 
     QDateTime currentTime = QDateTime::currentDateTime();
     QString msgToSend;
@@ -32,9 +36,12 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
     case QtDebugMsg:
     {
         isDebug = true;
+#ifdef MSG_TYPE
         typeMsg = "DEBUG";
+#endif
         break;
     }
+#ifdef MSG_TYPE
     case QtInfoMsg:
     {
         typeMsg = "INFO";
@@ -55,8 +62,16 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
         typeMsg = "FATAL";
         break;
     }
+#else
+    default:
+        break;
+#endif
     }
+#ifdef MSG_TYPE
     msgToSend = myMsg.arg(currentTime.toString()).arg(typeMsg).arg(msg);
+#else
+    msgToSend = myMsg.arg(currentTime.toString()).arg(msg);
+#endif
     if(!isDebug)
     {
         msgToSend += " " + QString(context.file) + " " + QString(context.line) + " " + QString(context.function);
@@ -73,7 +88,7 @@ MyLibraryServerGui::MyLibraryServerGui(QWidget *parent) :
 
     myLibServ = this;
 
-    myLog = new MyLog;
+    myLog = new MyLog(this);
 
     connect(this, &MyLibraryServerGui::sendMsg , ui->logText, &QTextEdit::append);
     connect(this, &MyLibraryServerGui::sendMsg , myLog, &MyLog::Log);
@@ -119,7 +134,6 @@ MyLibraryServerGui::~MyLibraryServerGui()
     threadServer->exit();
     threadDBAccess->exit();
     delete ui;
-    delete myLog;
 }
 
 void MyLibraryServerGui::sendMessageToTextEdit(const QString &msg)

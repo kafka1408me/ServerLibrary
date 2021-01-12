@@ -10,6 +10,7 @@ class mylibraryservergui;
 class QThread;
 class MyServer;
 class QTimer;
+class MyLog;
 
 enum ConnectionStatus
 {
@@ -44,7 +45,6 @@ private slots:
     void slot_setConnectionDBStatus(bool isConnected);
     void slot_setConnectionServerStatus(bool isConnected);
     void slot_Scroll_Log();
-
     void on_autoScroll_stateChanged(int state);
 
 private:
@@ -56,6 +56,7 @@ private:
     MyServer* myServer;
     QTimer* scrollTimer;
     QtMessageHandler defaultMsgHandler;
+    MyLog* myLog;
 };
 
 #endif // MYLIBRARYSERVERGUI_H

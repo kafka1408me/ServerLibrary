@@ -21,7 +21,6 @@ public:
 signals:
     void newActiveUser(qint64, QString);
     void loggedInUser(qint64, QString, bool);
-    void unloginned(qint64);
     void disconnectUser(qint64);
     void request(QJsonObject);
 

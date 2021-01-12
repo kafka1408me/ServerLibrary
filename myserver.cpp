@@ -28,11 +28,6 @@ void MyServer::StartServer()
         qDebug() << "MyServer: successfully start; and listen port = " << port;
         connect(webSocketServer, &QWebSocketServer::newConnection, this, &MyServer::slot_NewConnection);
     }
-
-//    QTimer* timer = new QTimer;
-//    timer->setInterval(10*1000);      // Каждые 10 секунд посылаем сигнал
-//    connect(timer, &QTimer::timeout, this, &MyServer::slot_sendConnectionStatus);
-//    timer->start();
 }
 
 void MyServer::setMyLibServer(MyLibraryServerGui *serverGui)

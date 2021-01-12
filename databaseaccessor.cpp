@@ -287,7 +287,7 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
                 book["reservation_user_id"] = query.value(rec.indexOf("reservation_user_id")).toInt();
                 book["time_unblocking"] = query.value(rec.indexOf("time_unblocking")).toDateTime().toString("dd.MM.yyyy hh:mm");
 
-            //    qDebug() <<"time_unblocking = " << book["time_unblocking"];
+                //    qDebug() <<"time_unblocking = " << book["time_unblocking"];
 
                 books.append(book);
             }
@@ -507,6 +507,77 @@ void DatabaseAccessor::slot_requestDB(QJsonObject obj)
             qDebug() <<query.lastQuery();
             qDebug() << "DatabaseAccessor: RateAppSet error : " << query.lastError().text();
         }
+        break;
+    }
+    case GetUsers:
+    {
+        int userType = mainObj.value("user_type").toInt();
+
+        QJsonObject replyObj;
+        QJsonObject replyObjMain;
+        replyObj.insert("type", type);
+
+        if(userType >= 0 || userType <= 2)
+        {
+            QString queryStr("SELECT * FROM users");
+
+            switch (userType)
+            {
+            case UserType::AllUsers:
+            {
+                break;
+            }
+            case UserType::OrdinaryUsers:
+            {
+                queryStr += " WHERE is_admin=false";
+                break;
+            }
+            case UserType::Administrators:
+            {
+                queryStr += " WHERE is_admin=true";
+                break;
+            }
+            default:
+                break;
+            }
+
+            if(query.exec(queryStr))
+            {
+                QSqlRecord rec = query.record();
+
+                QJsonArray users;
+                QJsonObject user;
+
+                while(query.next())
+                {
+                    user["user_id"] = query.value(rec.indexOf("user_id")).toInt();
+                    user["login"] = query.value(rec.indexOf("login")).toString();
+                    user["pass"] = query.value(rec.indexOf("pass")).toString();
+                    user["is_admin"] = query.value(rec.indexOf("is_admin")).toBool();
+                    user["rate_app"] = query.value(rec.indexOf("rate_app")).toInt();
+
+                    users.append(user);
+                }
+                replyObjMain.insert("result", "yes");
+                replyObjMain.insert("users", users);
+            }
+            else
+            {
+                replyObjMain.insert("type_error", UserTypeErrors::QueryError);
+                replyObjMain.insert("result", "no");
+                qDebug() << "DatabaseAccessor: error : " << query.lastError().text();
+            }
+        }
+        else
+        {
+            replyObjMain.insert("type_error", UserTypeErrors::BadUserTypeError);
+            replyObjMain.insert("result", "no");
+            qDebug() << "DataBaseAccessor: bad UserType = " << userType;
+        }
+
+        replyObj.insert("main", replyObjMain);
+
+        QMetaObject::invokeMethod(sender(), invokeSlot, Qt::QueuedConnection, Q_ARG(QJsonObject, replyObj));
         break;
     }
     default:
